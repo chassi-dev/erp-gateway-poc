@@ -10,6 +10,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Messaging;
 using System.Timers;
+using Newtonsoft.Json;
+using erp_gateway_poc.Model;
+using erp_gateway_poc.Util.MessageQueuing;
 
 namespace erp_gateway_poc {
     class Program {
@@ -28,10 +31,10 @@ namespace erp_gateway_poc {
 
 		static void Main(string[] args) {
 
-			Timer writeTimer = new Timer();
+			/*Timer writeTimer = new Timer();
 			writeTimer.Interval = 10000; // 15 seconds
 			writeTimer.Elapsed += new ElapsedEventHandler(QueueWrite);
-			writeTimer.Start();
+			writeTimer.Start();*/
 
 			List<MessageQueue> queueList = ListenToQueues();
 			Console.WriteLine($"Number of Queues {queueList.Count}");
@@ -82,6 +85,46 @@ namespace erp_gateway_poc {
 			}
 		}
 
+		private static void MyReceiveCompleted(Object source, ReceiveCompletedEventArgs asyncResult) {
+
+			try {
+
+				MessageQueue mq = (MessageQueue)source;
+				//mq.Formatter = new XmlMessageFormatter(new Type[] { typeof(String) });
+				Message message = mq.EndReceive(asyncResult.AsyncResult);
+				PurchaseOrderNotification body = (PurchaseOrderNotification) new JsonMessageFormatter<PurchaseOrderNotification>().Read(message);
+				//string jsonString = (string) new JsonMessageFormatter<string>().Read(message);
+				//PurchaseOrderNotification body = JsonConvert.DeserializeObject<PurchaseOrderNotification>(jsonString);
+
+				if (message != null) {
+					//Console.WriteLine($"{message.Label}: {message.Body} from queue: {mq.QueueName}");
+					Console.WriteLine($"from queue: {mq.QueueName}\n");
+					if(body.Inserted.Count > 0) {
+						Console.WriteLine(body.Inserted[0].OrderNbr);
+						Console.WriteLine(body.Inserted[0].Status);
+						Console.WriteLine(body.Inserted[0].LastModifiedDateTime);
+					}
+					if (body.Deleted.Count > 0) {
+						Console.WriteLine(body.Deleted[0].OrderNbr);
+						Console.WriteLine(body.Deleted[0].Status);
+						Console.WriteLine(body.Deleted[0].LastModifiedDateTime);
+					}
+					Console.WriteLine(body.Query);
+					Console.WriteLine(body.CompanyId);
+					Console.WriteLine(body.Id);
+					Console.WriteLine(body.TimeStamp);
+				}
+
+				mq.BeginReceive();
+			}
+			catch (MessageQueueException ex) {
+
+				Console.WriteLine(ex.Message);
+			}
+
+			return;
+		}
+
 		public static void QueueWrite(Object sender, ElapsedEventArgs args) {
 			try {
 
@@ -103,36 +146,7 @@ namespace erp_gateway_poc {
 			}
 		}
 
-		private static void StartListening() {
-
-			MessageQueue myQueue = GetQueueReference(@".\private$\feelgoodqueue");
-
-			myQueue.ReceiveCompleted += new ReceiveCompletedEventHandler(MyReceiveCompleted);
-
-			myQueue.BeginReceive();
-		}
-
-		private static void MyReceiveCompleted(Object source, ReceiveCompletedEventArgs asyncResult) {
-
-			try {
-
-				MessageQueue mq = (MessageQueue)source;
-				mq.Formatter = new XmlMessageFormatter(new string[] { "System.String" });
-				Message message = mq.EndReceive(asyncResult.AsyncResult);
-
-				if (message != null) {
-					Console.WriteLine($"{message.Label}: {message.Body} from queue: {mq.QueueName}");
-				}
-
-				mq.BeginReceive();
-			}
-			catch (MessageQueueException ex) {
-
-				Console.WriteLine(ex.Message);
-			}
-
-			return;
-		}
+		// Code from RestAPI client, just keeping it here for reference for a bit
 
 		private static void basicStuff() {
 			var authApi = new AuthApi(SiteURL);
