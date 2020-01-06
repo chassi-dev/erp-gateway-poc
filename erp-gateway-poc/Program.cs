@@ -145,7 +145,7 @@ namespace erp_gateway_poc {
 
 				var soApi = new SalesOrderApi();
 
-				List<SalesOrder> soOrders = soApi.SalesOrderGetList(filter: $"OrderNbr eq {basicSalesOrder.OrderNbr}");
+				List<SalesOrder> soOrders = soApi.SalesOrderGetList(filter: $"OrderNbr eq '{basicSalesOrder.OrderNbr}'");
 
 				Console.WriteLine(soOrders[0]);
 			}
