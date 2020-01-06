@@ -47,7 +47,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\AdditionalInfo.cs" />
+    <Compile Include="Model\BasicPurchaseOrder.cs" />
+    <Compile Include="Model\BasicSalesOrder.cs" />
     <Compile Include="Model\PurchaseOrderNotification.cs" />
+    <Compile Include="Model\SalesOrderNotification.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\JsonMessageFormatter.cs" />

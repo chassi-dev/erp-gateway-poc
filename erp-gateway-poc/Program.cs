@@ -13,6 +13,10 @@ using System.Timers;
 using Newtonsoft.Json;
 using erp_gateway_poc.Model;
 using erp_gateway_poc.Util.MessageQueuing;
+using System.IO;
+using System.Runtime.Serialization.Json;
+using System.Xml;
+using Acumatica.DefaultEndpoint.Model;
 
 namespace erp_gateway_poc {
     class Program {
@@ -21,7 +25,7 @@ namespace erp_gateway_poc {
 
 		const string SiteURL = "http://localhost/AcumaticaERP";
 		const string Username = "admin";
-		const string Password = "******";
+		const string Password = "99Layer16";
 		const string Tenant = "SalesOrder";
 
 		static List<string> queueNames = new List<string> {
@@ -88,31 +92,17 @@ namespace erp_gateway_poc {
 		private static void MyReceiveCompleted(Object source, ReceiveCompletedEventArgs asyncResult) {
 
 			try {
-
 				MessageQueue mq = (MessageQueue)source;
-				//mq.Formatter = new XmlMessageFormatter(new Type[] { typeof(String) });
 				Message message = mq.EndReceive(asyncResult.AsyncResult);
-				PurchaseOrderNotification body = (PurchaseOrderNotification) new JsonMessageFormatter<PurchaseOrderNotification>().Read(message);
-				//string jsonString = (string) new JsonMessageFormatter<string>().Read(message);
-				//PurchaseOrderNotification body = JsonConvert.DeserializeObject<PurchaseOrderNotification>(jsonString);
+				SalesOrderNotification body = (SalesOrderNotification) new JsonMessageFormatter<SalesOrderNotification>().Read(message);
 
 				if (message != null) {
-					//Console.WriteLine($"{message.Label}: {message.Body} from queue: {mq.QueueName}");
 					Console.WriteLine($"from queue: {mq.QueueName}\n");
+					Console.WriteLine(body);
+
 					if(body.Inserted.Count > 0) {
-						Console.WriteLine(body.Inserted[0].OrderNbr);
-						Console.WriteLine(body.Inserted[0].Status);
-						Console.WriteLine(body.Inserted[0].LastModifiedDateTime);
+						EnrichSalesOrder(body.Inserted[0], body.Id);
 					}
-					if (body.Deleted.Count > 0) {
-						Console.WriteLine(body.Deleted[0].OrderNbr);
-						Console.WriteLine(body.Deleted[0].Status);
-						Console.WriteLine(body.Deleted[0].LastModifiedDateTime);
-					}
-					Console.WriteLine(body.Query);
-					Console.WriteLine(body.CompanyId);
-					Console.WriteLine(body.Id);
-					Console.WriteLine(body.TimeStamp);
 				}
 
 				mq.BeginReceive();
@@ -143,6 +133,28 @@ namespace erp_gateway_poc {
 
 				Console.WriteLine(ex.Message);
 
+			}
+		}
+
+		private static void EnrichSalesOrder(BasicSalesOrder basicSalesOrder, string id) {
+			var authApi = new AuthApi(SiteURL);
+			var cookieContainer = new CookieContainer();
+			authApi.Configuration.ApiClient.RestClient.CookieContainer = cookieContainer;
+			try {
+				LogIn(authApi);
+
+				var soApi = new SalesOrderApi();
+
+				List<SalesOrder> soOrders = soApi.SalesOrderGetList(filter: $"OrderNbr eq {basicSalesOrder.OrderNbr}");
+
+				Console.WriteLine(soOrders[0]);
+			}
+			catch (Exception e) {
+				Console.WriteLine(e.Message);
+			}
+			finally {
+				//we use logout in finally block because we need to always logut, even if the request failed for some reason
+				authApi.AuthLogout();
 			}
 		}
 

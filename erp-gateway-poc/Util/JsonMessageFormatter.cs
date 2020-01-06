@@ -1,16 +1,17 @@
 ﻿using NetJSON;
 using Newtonsoft.Json;
 using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
-    using System.Messaging;
-    using System.Text;
-    using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Messaging;
+using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace erp_gateway_poc.Util {
-    
+
     namespace MessageQueuing {
         public class JsonMessageFormatter<T> : IMessageFormatter {
             private Encoding encoding;
@@ -36,12 +37,9 @@ namespace erp_gateway_poc.Util {
                 if (message == null) {
                     throw new ArgumentNullException("message");
                 }
-                using (var reader = new StreamReader(message.BodyStream, encoding)) {
-                    var json = reader.ReadToEnd();
-                    //return NetJSON.NetJSON.Deserialize<T>(json);
-                    Console.WriteLine($"RAW JSON:\n{json}");
-                    return JsonConvert.DeserializeObject<T>(json);
-                }
+                var ser = new DataContractJsonSerializer(typeof(T));
+                T obj = (T)ser.ReadObject(message.BodyStream);
+                return obj;
             }
             public void Write(Message message, object obj) {
                 if (message == null) {
