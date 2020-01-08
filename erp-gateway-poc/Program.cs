@@ -147,7 +147,15 @@ namespace erp_gateway_poc {
 
 				List<SalesOrder> soOrders = soApi.SalesOrderGetList(filter: $"OrderNbr eq '{basicSalesOrder.OrderNbr}'");
 
-				Console.WriteLine(soOrders[0]);
+				Console.WriteLine($"Enriched SOOrder for OrderNbr {basicSalesOrder.OrderNbr}");
+				Console.WriteLine($"Id: {soOrders[0].Id.Value}");
+				Console.WriteLine($"Status: {soOrders[0].Status.Value}");
+				Console.WriteLine($"Order Number: {soOrders[0].OrderNbr.Value}");
+				Console.WriteLine($"Order Type: {soOrders[0].OrderType.Value}");
+				Console.WriteLine($"Order Quantity: {soOrders[0].OrderedQty.Value}");
+				Console.WriteLine($"Order Total: {soOrders[0].OrderTotal.Value}");
+				Console.WriteLine($"CustomerId: {soOrders[0].CustomerID.Value}");
+				Console.WriteLine($"Last Modified: {soOrders[0].LastModified.Value}");
 			}
 			catch (Exception e) {
 				Console.WriteLine(e.Message);

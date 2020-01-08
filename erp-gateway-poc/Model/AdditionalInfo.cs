@@ -22,7 +22,7 @@ namespace erp_gateway_poc.Model {
 
         public override string ToString() {
             var sb = new StringBuilder();
-            sb.Append("class SalesOrderNotification {\n");
+            sb.Append("class AdditionalInfo {\n");
             sb.Append("  PXPerformanceInfoStartTime: ").Append(PXPerformanceInfoStartTime).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
